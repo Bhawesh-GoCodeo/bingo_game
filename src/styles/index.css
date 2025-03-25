@@ -1,0 +1,181 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+  }
+
+  body {
+    @apply bg-background text-text;
+    overscroll-behavior: none;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 touch-manipulation;
+  }
+
+  .btn-primary {
+    @apply bg-gradient-to-r from-primary to-primary/90 text-white hover:from-primary/90 hover:to-primary focus:ring-primary/50 active:from-primary/80 active:to-primary/70;
+  }
+
+  .btn-secondary {
+    @apply bg-gradient-to-r from-secondary to-secondary/90 text-white hover:from-secondary/90 hover:to-secondary focus:ring-secondary/50 active:from-secondary/80 active:to-secondary/70;
+  }
+
+  .btn-accent {
+    @apply bg-gradient-to-r from-accent to-accent/90 text-white hover:from-accent/90 hover:to-accent focus:ring-accent/50 active:from-accent/80 active:to-accent/70;
+  }
+
+  .bingo-cell {
+    @apply flex items-center justify-center rounded-lg font-medium transition-all duration-200 cursor-pointer select-none relative touch-manipulation;
+  }
+
+  .bingo-cell-marked {
+    @apply bg-primary text-white shadow-md;
+  }
+
+  .bingo-cell-free {
+    @apply bg-secondary text-white shadow-md;
+  }
+
+  .bingo-cell-winning {
+    @apply bg-accent text-white shadow-lg;
+  }
+}
+
+@layer utilities {
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .grid-board-5 {
+    grid-template-columns: repeat(5, minmax(40px, 1fr));
+  }
+  
+  .grid-board-8 {
+    grid-template-columns: repeat(8, minmax(30px, 1fr));
+  }
+  
+  .grid-board-10 {
+    grid-template-columns: repeat(10, minmax(25px, 1fr));
+  }
+  
+  .animate-pop {
+    animation: pop 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  }
+  
+  @keyframes pop {
+    0% {
+      transform: scale(0.8);
+      opacity: 0.5;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  
+  .animate-win {
+    animation: win 1s ease-in-out infinite alternate;
+  }
+  
+  @keyframes win {
+    0% {
+      transform: scale(1);
+      box-shadow: 0 0 0 rgba(245, 158, 11, 0.5);
+    }
+    100% {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.8);
+    }
+  }
+  
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+  
+  @media (max-width: 475px) {
+    .xs\:flex-row {
+      flex-direction: row;
+    }
+    
+    .xs\:w-auto {
+      width: auto;
+    }
+    
+    .xs\:inline {
+      display: inline;
+    }
+  }
+  
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.8) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+  
+  .pulse-ring {
+    position: relative;
+  }
+  
+  .pulse-ring::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    padding: 4px;
+    background: linear-gradient(
+      to right,
+      var(--tw-gradient-stops)
+    );
+    --tw-gradient-from: #4F46E5;
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(79, 70, 229, 0));
+    --tw-gradient-to: #F59E0B;
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: pulse-ring 1.5s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+  }
+  
+  @keyframes pulse-ring {
+    0% {
+      transform: scale(0.95);
+      opacity: 0.7;
+    }
+    50% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(0.95);
+      opacity: 0.7;
+    }
+  }
+}
