@@ -1,6 +1,8 @@
-import { BoardSize, BingoBoard, BingoCellData, WinningLine, GameState, PowerUpType } from './types';
+// import { BoardSize, BingoBoard, BingoCellData, WinningLine, GameState, PowerUpType } from './types';
 
 // Generate a random board with numbers in the appropriate range
+import { BoardSize, BingoBoard, BingoCellData, WinningLine, GameState } from './types';
+
 export const generateBoard = (size: BoardSize): BingoBoard => {
   const board: BingoBoard = [];
   const usedNumbers = new Set<number>();
@@ -9,10 +11,6 @@ export const generateBoard = (size: BoardSize): BingoBoard => {
   for (let row = 0; row < size; row++) {
     const newRow: BingoCellData[] = [];
     for (let col = 0; col < size; col++) {
-      // No more free space in 5x5 board
-      const isFreeSpace = false;
-      
-      // Generate a unique random number
       let randomNum;
       do {
         randomNum = Math.floor(Math.random() * maxNumber) + 1;
@@ -35,14 +33,14 @@ export const generateBoard = (size: BoardSize): BingoBoard => {
   return board;
 };
 
-// Check for all winning lines on the board
 export const checkForWinningLines = (board: BingoBoard): WinningLine[] => {
   const size = board.length;
   const winningLines: WinningLine[] = [];
   
   // Check rows
   for (let row = 0; row < size; row++) {
-    if (board[row].every(cell => cell.isMarked)) {
+    const isRowComplete = board[row].every(cell => cell.isMarked);
+    if (isRowComplete) {
       const cells: [number, number][] = [];
       for (let col = 0; col < size; col++) {
         cells.push([row, col]);
@@ -53,15 +51,8 @@ export const checkForWinningLines = (board: BingoBoard): WinningLine[] => {
   
   // Check columns
   for (let col = 0; col < size; col++) {
-    let allMarked = true;
-    for (let row = 0; row < size; row++) {
-      if (!board[row][col].isMarked) {
-        allMarked = false;
-        break;
-      }
-    }
-    
-    if (allMarked) {
+    const isColumnComplete = board.every(row => row[col].isMarked);
+    if (isColumnComplete) {
       const cells: [number, number][] = [];
       for (let row = 0; row < size; row++) {
         cells.push([row, col]);
@@ -70,16 +61,9 @@ export const checkForWinningLines = (board: BingoBoard): WinningLine[] => {
     }
   }
   
-  // Check main diagonal (top-left to bottom-right)
-  let mainDiagonalMarked = true;
-  for (let i = 0; i < size; i++) {
-    if (!board[i][i].isMarked) {
-      mainDiagonalMarked = false;
-      break;
-    }
-  }
-  
-  if (mainDiagonalMarked) {
+  // Check main diagonal
+  const isMainDiagonalComplete = board.every((row, i) => row[i].isMarked);
+  if (isMainDiagonalComplete) {
     const cells: [number, number][] = [];
     for (let i = 0; i < size; i++) {
       cells.push([i, i]);
@@ -87,16 +71,9 @@ export const checkForWinningLines = (board: BingoBoard): WinningLine[] => {
     winningLines.push({ type: 'diagonal', index: 0, cells });
   }
   
-  // Check anti-diagonal (top-right to bottom-left)
-  let antiDiagonalMarked = true;
-  for (let i = 0; i < size; i++) {
-    if (!board[i][size - 1 - i].isMarked) {
-      antiDiagonalMarked = false;
-      break;
-    }
-  }
-  
-  if (antiDiagonalMarked) {
+  // Check anti-diagonal
+  const isAntiDiagonalComplete = board.every((row, i) => row[size - 1 - i].isMarked);
+  if (isAntiDiagonalComplete) {
     const cells: [number, number][] = [];
     for (let i = 0; i < size; i++) {
       cells.push([i, size - 1 - i]);
@@ -107,18 +84,16 @@ export const checkForWinningLines = (board: BingoBoard): WinningLine[] => {
   return winningLines;
 };
 
-// Mark a cell on the board
 export const markCell = (board: BingoBoard, row: number, col: number): BingoBoard => {
   const newBoard = JSON.parse(JSON.stringify(board)) as BingoBoard;
   newBoard[row][col].isMarked = !newBoard[row][col].isMarked;
   return newBoard;
 };
 
-// Mark winning cells
 export const markWinningCells = (board: BingoBoard, winningLines: WinningLine[]): BingoBoard => {
   const newBoard = JSON.parse(JSON.stringify(board)) as BingoBoard;
   
-  // Reset all winning cell indicators
+  // Reset winning cell states
   for (let row = 0; row < newBoard.length; row++) {
     for (let col = 0; col < newBoard[row].length; col++) {
       newBoard[row][col].isWinningCell = false;
@@ -126,54 +101,77 @@ export const markWinningCells = (board: BingoBoard, winningLines: WinningLine[])
     }
   }
   
-  // Mark cells that are part of winning lines
+  // Mark winning cells and track line indices
   winningLines.forEach((line, lineIndex) => {
-    for (const [row, col] of line.cells) {
+    line.cells.forEach(([row, col]) => {
       newBoard[row][col].isWinningCell = true;
-      newBoard[row][col].winningLineIndices.push(lineIndex);
-    }
+      if (!newBoard[row][col].winningLineIndices.includes(lineIndex)) {
+        newBoard[row][col].winningLineIndices.push(lineIndex);
+      }
+    });
   });
   
   return newBoard;
 };
 
-// Reset the board
+export const updateGameState = (currentState: GameState, newLines: WinningLine[]): GameState => {
+  const existingLineKeys = new Set(
+    currentState.completedLines.map(line => `${line.type}-${line.index}`)
+  );
+  
+  const uniqueNewLines = newLines.filter(line => {
+    const lineKey = `${line.type}-${line.index}`;
+    return !existingLineKeys.has(lineKey);
+  });
+  
+  if (uniqueNewLines.length === 0) {
+    return currentState;
+  }
+  
+  return {
+    ...currentState,
+    completedLines: [...currentState.completedLines, ...uniqueNewLines]
+  };
+};
+
+// export const isGameWon = (gameState: GameState): boolean => {
+//   return gameState.completedLines.length >= gameState.requiredLinesToWin;
+// };
+
 export const resetBoard = (size: BoardSize): BingoBoard => {
   return generateBoard(size);
 };
 
-// Initialize game state
 export const initializeGameState = (): GameState => {
   return {
     completedLines: [],
     requiredLinesToWin: 5
   };
 };
-
 // Check if the game is won
 export const isGameWon = (gameState: GameState): boolean => {
   return gameState.completedLines.length >= gameState.requiredLinesToWin;
 };
 
 // Update game state with new winning lines
-export const updateGameState = (
-  gameState: GameState, 
-  newWinningLines: WinningLine[]
-): GameState => {
-  // Filter out any winning lines that are already in the game state
-  const existingLineKeys = new Set(
-    gameState.completedLines.map(line => `${line.type}-${line.index}`)
-  );
+// export const updateGameState = (
+//   gameState: GameState, 
+//   newWinningLines: WinningLine[]
+// ): GameState => {
+//   // Filter out any winning lines that are already in the game state
+//   const existingLineKeys = new Set(
+//     gameState.completedLines.map(line => `${line.type}-${line.index}`)
+//   );
   
-  const uniqueNewLines = newWinningLines.filter(
-    line => !existingLineKeys.has(`${line.type}-${line.index}`)
-  );
+//   const uniqueNewLines = newWinningLines.filter(
+//     line => !existingLineKeys.has(`${line.type}-${line.index}`)
+//   );
   
-  return {
-    ...gameState,
-    completedLines: [...gameState.completedLines, ...uniqueNewLines]
-  };
-};
+//   return {
+//     ...gameState,
+//     completedLines: [...gameState.completedLines, ...uniqueNewLines]
+//   };
+// };
 
 // Shuffle the board (power-up)
 export const shuffleBoard = (board: BingoBoard): BingoBoard => {

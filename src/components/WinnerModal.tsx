@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GameState } from '../utils/types';
 import { useGameModes } from '../context/GameModesContext';
@@ -13,9 +13,23 @@ interface WinnerModalProps {
 const WinnerModal: React.FC<WinnerModalProps> = ({ isOpen, gameState, onClose, onNewGame }) => {
   const { state } = useGameModes();
   const { settings, gameMode, timeLeft } = state;
+
+  console.log(" WinnerModal state", state);
   
+  const handleModalClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+  useEffect(() => {
+    return () => {
+      // Cleanup function
+      if ('vibrate' in navigator) {
+        navigator.vibrate(0); // Stop any ongoing vibration
+      }
+    };
+  }, []);
+
   if (gameState.completedLines.length < gameState.requiredLinesToWin) return null;
-  
+
   // Count the types of winning lines
   const countLineTypes = () => {
     const counts = {
@@ -65,7 +79,7 @@ const WinnerModal: React.FC<WinnerModalProps> = ({ isOpen, gameState, onClose, o
             initial={{ scale: 0.8, y: 20 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.8, y: 20 }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={handleModalClick}
           >
             <div className="text-center">
               <motion.h2 
